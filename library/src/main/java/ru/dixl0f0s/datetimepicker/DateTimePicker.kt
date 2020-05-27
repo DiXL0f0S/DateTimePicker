@@ -65,6 +65,12 @@ class DateTimePicker @JvmOverloads constructor(
             updateValues()
         }
 
+    var stepMinutes: Int = 5
+        set(value) {
+            field = value
+            updateValues()
+        }
+
     var selectedDate: LocalDateTime = LocalDateTime.now()
 
     init {
@@ -128,7 +134,7 @@ class DateTimePicker @JvmOverloads constructor(
 
         val min: LocalTime
         if (isFirstDaySelected()) {
-            min = getMaxTime(minDayTime, LocalTime.now())
+            min = getMaxTime(minDayTime.withMinute(0), LocalTime.now().withMinute(0))
         } else {
             min = minDayTime
         }
@@ -161,9 +167,12 @@ class DateTimePicker @JvmOverloads constructor(
         }
         LongRange(0, ChronoUnit.MINUTES.between(min, max)).forEach {
             val time = min.plusMinutes(it)
-            minutes.add(time)
-            val str = (if (time.minute.toString().length == 1) "0" else "") + time.minute.toString()
-            minutesStrings.add(str)
+            if (time.minute % stepMinutes == 0) {
+                minutes.add(time)
+                val str =
+                    (if (time.minute.toString().length == 1) "0" else "") + time.minute.toString()
+                minutesStrings.add(str)
+            }
         }
         numberPickerMinute.valuesList = minutesStrings
     }
@@ -171,14 +180,11 @@ class DateTimePicker @JvmOverloads constructor(
     private fun onDayChanged(index: Int) {
         selectedDate = selectedDate.withDayOfYear(LocalDate.now().plusDays(index.toLong()).dayOfYear)
         setHourPicker()
+        setMinutePicker()
     }
 
     private fun onHourChanged(hour: Int) {
         selectedDate = selectedDate.withHour(hour)
-        val min = if (selectedDate.isToday() && selectedDate.isCurrentHour())
-            LocalTime.of(hour, LocalTime.now().minute) else
-            LocalTime.of(hour, minDayTime.minute)
-        val max = LocalTime.of(hour, 59)
         setMinutePicker()
     }
 
