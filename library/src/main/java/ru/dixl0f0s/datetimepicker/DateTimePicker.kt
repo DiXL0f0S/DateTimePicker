@@ -1,16 +1,26 @@
 package ru.dixl0f0s.datetimepicker
 
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Gravity
+import android.view.View
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.TextView
+import androidx.annotation.ColorInt
+import java.lang.reflect.Field
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+
 
 class DateTimePicker @JvmOverloads constructor(
     context: Context,
@@ -70,6 +80,22 @@ class DateTimePicker @JvmOverloads constructor(
         set(value) {
             field = value
             listener?.onDateTimeSelected(value)
+        }
+
+    @ColorInt
+    var color: Int? = null
+        set(value) {
+            if (value == null) {
+                invalidate()
+            } else {
+                field = value
+                setNumberPickerTextColor(numberPickerDay, value)
+                setDividerColor(numberPickerDay, value)
+                setNumberPickerTextColor(numberPickerHour, value)
+                setDividerColor(numberPickerHour, value)
+                setNumberPickerTextColor(numberPickerMinute, value)
+                setDividerColor(numberPickerMinute, value)
+            }
         }
 
     var showTodayText: Boolean = true
@@ -262,4 +288,47 @@ class DateTimePicker @JvmOverloads constructor(
     private fun LocalTime.isCurrentHour() = this.hour == startDateTime.hour
 
     private fun LocalDateTime.isCurrentHour() = this.hour == startDateTime.hour
+
+    private fun setNumberPickerTextColor(numberPicker: NumberPicker, color: Int) {
+        try {
+            val selectorWheelPaintField: Field = numberPicker.javaClass
+                .getDeclaredField("mSelectorWheelPaint")
+            selectorWheelPaintField.setAccessible(true)
+            (selectorWheelPaintField.get(numberPicker) as Paint).setColor(color)
+        } catch (e: NoSuchFieldException) {
+            Log.w("NumberPickerTextColor", e)
+        } catch (e: IllegalAccessException) {
+            Log.w("NumberPickerTextColor", e)
+        } catch (e: IllegalArgumentException) {
+            Log.w("NumberPickerTextColor", e)
+        }
+        val count = numberPicker.childCount
+        for (i in 0 until count) {
+            val child: View = numberPicker.getChildAt(i)
+            if (child is EditText)
+                child.setTextColor(color)
+        }
+        numberPicker.invalidate()
+    }
+
+    private fun setDividerColor(picker: NumberPicker, color: Int) {
+        val pickerFields =
+            NumberPicker::class.java.declaredFields
+        for (pf in pickerFields) {
+            if (pf.name == "mSelectionDivider") {
+                pf.isAccessible = true
+                try {
+                    val colorDrawable = ColorDrawable(color)
+                    pf[picker] = colorDrawable
+                } catch (e: java.lang.IllegalArgumentException) {
+                    e.printStackTrace()
+                } catch (e: Resources.NotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IllegalAccessException) {
+                    e.printStackTrace()
+                }
+                break
+            }
+        }
+    }
 }
