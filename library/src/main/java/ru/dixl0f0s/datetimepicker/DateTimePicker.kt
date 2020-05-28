@@ -9,11 +9,8 @@ import android.widget.TextView
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.chrono.ChronoLocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.math.max
-
 
 class DateTimePicker @JvmOverloads constructor(
     context: Context,
@@ -29,37 +26,35 @@ class DateTimePicker @JvmOverloads constructor(
         gravity = Gravity.CENTER
     }
 
-    var minDate: LocalDateTime = LocalDateTime.now()
+    private var _startDateTime: LocalDateTime? = null
+    var startDateTime: LocalDateTime
+        get() {
+            return if (_startDateTime == null) LocalDateTime.now() else _startDateTime!!
+        }
+        set(value) {
+            _startDateTime = value
+            updateValues()
+        }
+
+    var minDate: LocalDateTime = startDateTime
         set(value) {
             field = value
             updateValues()
         }
 
-    var maxDate: LocalDateTime = LocalDateTime.now()
+    var maxDate: LocalDateTime = startDateTime
         set(value) {
             field = value
             updateValues()
         }
 
-    private var currentMinDate: LocalDateTime = LocalDateTime.now()
-        set(value) {
-            field = value
-            //updateValues()
-        }
-
-    private var currentMaxDate: LocalDateTime = LocalDateTime.now()
+    var minTime: LocalTime = LocalTime.of(0, 0)
         set(value) {
             field = value
             updateValues()
         }
 
-    var minDayTime: LocalTime = LocalTime.of(10, 10)
-        set(value) {
-            field = value
-            updateValues()
-        }
-
-    var maxDayTime: LocalTime = LocalTime.of(23, 30)
+    var maxTime: LocalTime = LocalTime.of(23, 59)
         set(value) {
             field = value
             updateValues()
@@ -71,7 +66,7 @@ class DateTimePicker @JvmOverloads constructor(
             updateValues()
         }
 
-    var selectedDate: LocalDateTime = LocalDateTime.now()
+    var selectedDate: LocalDateTime = startDateTime
 
     init {
         orientation = HORIZONTAL
@@ -120,7 +115,7 @@ class DateTimePicker @JvmOverloads constructor(
         LongRange(0, ChronoUnit.DAYS.between(minDate, maxDate)).forEach {
             val date = minDate.plusDays(it)
             days.add(date)
-            if (date.toLocalDate().isEqual(LocalDate.now()))
+            if (date.toLocalDate().isEqual(startDateTime.toLocalDate()))
                 daysStrings.add(context.getString(R.string.today))
             else
                 daysStrings.add(date.format(formatter))
@@ -134,11 +129,11 @@ class DateTimePicker @JvmOverloads constructor(
 
         val min: LocalTime
         if (isFirstDaySelected()) {
-            min = getMaxTime(minDayTime.withMinute(0), LocalTime.now().withMinute(0))
+            min = getMaxTime(minTime.withMinute(0), startDateTime.toLocalTime().withMinute(0))
         } else {
-            min = minDayTime
+            min = minTime
         }
-        val max = maxDayTime
+        val max = maxTime
         LongRange(0, ChronoUnit.HOURS.between(min, max)).forEach {
             val time = min.plusHours(it)
             hours.add(time)
@@ -154,16 +149,16 @@ class DateTimePicker @JvmOverloads constructor(
 
         val min: LocalTime
         if (isFirstDaySelected() && isFirstHourSelected()) {
-            min = getMaxTime(minDayTime.withHour(getSelectedHour()), LocalTime.now())
+            min = getMaxTime(minTime.withHour(getSelectedHour()), startDateTime.toLocalTime())
         } else {
-            min = minDayTime.withHour(getSelectedHour())
+            min = minTime.withHour(getSelectedHour())
         }
 
         val max: LocalTime
         if (isLastHourSelected()) {
-            max = maxDayTime.withHour(getSelectedHour())
+            max = maxTime.withHour(getSelectedHour())
         } else {
-            max = maxDayTime.withHour(getSelectedHour()).withMinute(59)
+            max = maxTime.withHour(getSelectedHour()).withMinute(59)
         }
         LongRange(0, ChronoUnit.MINUTES.between(min, max)).forEach {
             val time = min.plusMinutes(it)
@@ -178,7 +173,8 @@ class DateTimePicker @JvmOverloads constructor(
     }
 
     private fun onDayChanged(index: Int) {
-        selectedDate = selectedDate.withDayOfYear(LocalDate.now().plusDays(index.toLong()).dayOfYear)
+        selectedDate =
+            selectedDate.withDayOfYear(startDateTime.toLocalDate().plusDays(index.toLong()).dayOfYear)
         setHourPicker()
         setMinutePicker()
     }
@@ -194,19 +190,23 @@ class DateTimePicker @JvmOverloads constructor(
 
     fun getSelectedHour(): Int = numberPickerHour.displayedValues[numberPickerHour.value].toInt()
 
-    fun getSelectedMinute(): Int = numberPickerMinute.displayedValues[numberPickerMinute.value].toInt()
+    fun getSelectedMinute(): Int =
+        numberPickerMinute.displayedValues[numberPickerMinute.value].toInt()
 
     fun isFirstDaySelected(): Boolean = numberPickerDay.value == 0
 
-    fun isLastDaySelected(): Boolean = numberPickerDay.value == (numberPickerDay.displayedValues.size - 1)
+    fun isLastDaySelected(): Boolean =
+        numberPickerDay.value == (numberPickerDay.displayedValues.size - 1)
 
     fun isFirstHourSelected(): Boolean = numberPickerHour.value == 0
 
-    fun isLastHourSelected(): Boolean = numberPickerHour.value == (numberPickerHour.displayedValues.size - 1)
+    fun isLastHourSelected(): Boolean =
+        numberPickerHour.value == (numberPickerHour.displayedValues.size - 1)
 
     fun isFirstMinuteSelected(): Boolean = numberPickerMinute.value == 0
 
-    fun isLastMinuteSelected(): Boolean = numberPickerMinute.value == (numberPickerMinute.displayedValues.size - 1)
+    fun isLastMinuteSelected(): Boolean =
+        numberPickerMinute.value == (numberPickerMinute.displayedValues.size - 1)
 
     private fun getMaxTime(localTimeA: LocalTime, localTimeB: LocalTime): LocalTime {
         if (localTimeA.isAfter(localTimeB))
@@ -220,7 +220,10 @@ class DateTimePicker @JvmOverloads constructor(
         return localDateB
     }
 
-    private fun getMaxDateTime(localDateTimeA: LocalDateTime, localDateTimeB: LocalDateTime): LocalDateTime {
+    private fun getMaxDateTime(
+        localDateTimeA: LocalDateTime,
+        localDateTimeB: LocalDateTime
+    ): LocalDateTime {
         if (localDateTimeA.isAfter(localDateTimeB))
             return localDateTimeA
         return localDateTimeB
@@ -236,11 +239,11 @@ class DateTimePicker @JvmOverloads constructor(
             displayedValues = value.toTypedArray()
         }
 
-    private fun LocalDate.isToday() = LocalDate.now().isEqual(this)
+    private fun LocalDate.isToday() = startDateTime.toLocalDate().isEqual(this)
 
-    private fun LocalDateTime.isToday() = LocalDate.now().isEqual(this.toLocalDate())
+    private fun LocalDateTime.isToday() = startDateTime.toLocalDate().isEqual(this.toLocalDate())
 
-    private fun LocalTime.isCurrentHour() = this.hour == LocalTime.now().hour
+    private fun LocalTime.isCurrentHour() = this.hour == startDateTime.hour
 
-    private fun LocalDateTime.isCurrentHour() = this.hour == LocalTime.now().hour
+    private fun LocalDateTime.isCurrentHour() = this.hour == startDateTime.hour
 }
