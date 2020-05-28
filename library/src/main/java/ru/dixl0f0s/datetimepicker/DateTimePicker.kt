@@ -151,8 +151,8 @@ class DateTimePicker @JvmOverloads constructor(
         val days: MutableList<LocalDateTime> = mutableListOf()
         val daysStrings: MutableList<String> = mutableListOf()
         val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMMM")
-        LongRange(0, ChronoUnit.DAYS.between(minDate, maxDate)).forEach {
-            val date = minDate.plusDays(it)
+        for (i in 0..ChronoUnit.DAYS.between(minDate, maxDate)) {
+            val date = minDate.plusDays(i)
             days.add(date)
             if (showTodayText && date.toLocalDate().isEqual(LocalDate.now()))
                 daysStrings.add(context.getString(R.string.today))
@@ -173,11 +173,19 @@ class DateTimePicker @JvmOverloads constructor(
             min = minTime
         }
         val max = maxTime
-        LongRange(0, ChronoUnit.HOURS.between(min, max)).forEach {
-            val time = min.plusHours(it)
-            hours.add(time)
-            val str = (if (time.hour.toString().length == 1) "0" else "") + time.hour.toString()
-            hoursStrings.add(str)
+        for (i in 0..ChronoUnit.HOURS.between(min, max)) {
+            val time = min.plusHours(i)
+            if (i == 0L) {
+                if (startDateTime.minute + stepMinutes < 60) {
+                    hours.add(time)
+                    val str = (if (time.hour.toString().length == 1) "0" else "") + time.hour.toString()
+                    hoursStrings.add(str)
+                }
+            } else {
+                hours.add(time)
+                val str = (if (time.hour.toString().length == 1) "0" else "") + time.hour.toString()
+                hoursStrings.add(str)
+            }
         }
         numberPickerHour.valuesList = hoursStrings
         selectedDate = selectedDate.withHour(getSelectedHour())
@@ -200,8 +208,8 @@ class DateTimePicker @JvmOverloads constructor(
         } else {
             max = maxTime.withHour(getSelectedHour()).withMinute(59)
         }
-        LongRange(0, ChronoUnit.MINUTES.between(min, max)).forEach {
-            val time = min.plusMinutes(it)
+        for (i in 0..ChronoUnit.MINUTES.between(min, max)) {
+            val time = min.plusMinutes(i)
             if (time.minute % stepMinutes == 0) {
                 minutes.add(time)
                 val str =
