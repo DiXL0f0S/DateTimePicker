@@ -67,35 +67,45 @@ class DateTimePicker @JvmOverloads constructor(
         }
 
     var selectedDate: LocalDateTime = startDateTime
+        set(value) {
+            field = value
+            listener?.onDateTimeSelected(value)
+        }
+
+    var listener: DateTimeSelectedListener? = null
 
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER
+        weightSum = 3f
 
         addView(numberPickerDay)
-        val dayLayoutParams = numberPickerDay.layoutParams as MarginLayoutParams
+        val dayLayoutParams = numberPickerDay.layoutParams as LayoutParams
         dayLayoutParams.setMargins(10, 0, 30, 0)
+        dayLayoutParams.weight = 1f
         numberPickerDay.layoutParams = dayLayoutParams
         numberPickerDay.setOnValueChangedListener { picker, oldVal, newVal ->
-            onDayChanged(numberPickerHour.value)
+            onDayChanged(newVal)
         }
 
         addView(numberPickerHour)
-        val hourLayoutParams = numberPickerHour.layoutParams as MarginLayoutParams
+        val hourLayoutParams = numberPickerHour.layoutParams as LayoutParams
         hourLayoutParams.setMargins(10, 0, 10, 0)
+        hourLayoutParams.weight = 1f
         numberPickerHour.layoutParams = hourLayoutParams
         numberPickerHour.setOnValueChangedListener { picker, oldVal, newVal ->
             onHourChanged(getSelectedHour())
         }
 
         addView(tvColon)
-        val colonLayoutParams = tvColon.layoutParams as MarginLayoutParams
+        val colonLayoutParams = tvColon.layoutParams as LayoutParams
         colonLayoutParams.setMargins(10, 0, 10, 0)
         tvColon.layoutParams = colonLayoutParams
 
         addView(numberPickerMinute)
-        val minuteLayoutParams = numberPickerMinute.layoutParams as MarginLayoutParams
+        val minuteLayoutParams = numberPickerMinute.layoutParams as LayoutParams
         minuteLayoutParams.setMargins(10, 0, 10, 0)
+        minuteLayoutParams.weight = 1f
         numberPickerMinute.layoutParams = minuteLayoutParams
         numberPickerMinute.setOnValueChangedListener { picker, oldVal, newVal ->
             onMinuteChanged(getSelectedMinute())
@@ -174,7 +184,9 @@ class DateTimePicker @JvmOverloads constructor(
 
     private fun onDayChanged(index: Int) {
         selectedDate =
-            selectedDate.withDayOfYear(startDateTime.toLocalDate().plusDays(index.toLong()).dayOfYear)
+            selectedDate.withDayOfYear(
+                startDateTime.toLocalDate().plusDays(index.toLong()).dayOfYear
+            )
         setHourPicker()
         setMinutePicker()
     }
