@@ -151,6 +151,7 @@ class DateTimePicker @JvmOverloads constructor(
             hoursStrings.add(str)
         }
         numberPickerHour.valuesList = hoursStrings
+        selectedDate = selectedDate.withHour(getSelectedHour())
     }
 
     private fun setMinutePicker() {
@@ -180,6 +181,7 @@ class DateTimePicker @JvmOverloads constructor(
             }
         }
         numberPickerMinute.valuesList = minutesStrings
+        selectedDate = selectedDate.withMinute(getSelectedMinute())
     }
 
     private fun onDayChanged(index: Int) {
