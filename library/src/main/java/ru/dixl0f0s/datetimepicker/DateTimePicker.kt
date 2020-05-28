@@ -1,8 +1,8 @@
 package ru.dixl0f0s.datetimepicker
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
@@ -15,12 +15,13 @@ import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import java.lang.reflect.Field
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
 
 class DateTimePicker @JvmOverloads constructor(
     context: Context,
@@ -289,6 +290,10 @@ class DateTimePicker @JvmOverloads constructor(
 
     private fun LocalDateTime.isCurrentHour() = this.hour == startDateTime.hour
 
+    internal fun selectNextMinute() {
+        changeValueByOne(numberPickerMinute, true)
+    }
+
     private fun setNumberPickerTextColor(numberPicker: NumberPicker, color: Int) {
         try {
             val selectorWheelPaintField: Field = numberPicker.javaClass
@@ -329,6 +334,27 @@ class DateTimePicker @JvmOverloads constructor(
                 }
                 break
             }
+        }
+    }
+
+    @SuppressLint("DiscouragedPrivateApi")
+    private fun changeValueByOne(higherPicker: NumberPicker, increment: Boolean) {
+        val method: Method
+        try {
+            method = higherPicker.javaClass.getDeclaredMethod(
+                "changeValueByOne",
+                Boolean::class.javaPrimitiveType
+            )
+            method.setAccessible(true)
+            method.invoke(higherPicker, increment)
+        } catch (e: NoSuchMethodException) {
+            e.printStackTrace()
+        } catch (e: java.lang.IllegalArgumentException) {
+            e.printStackTrace()
+        } catch (e: IllegalAccessException) {
+            e.printStackTrace()
+        } catch (e: InvocationTargetException) {
+            e.printStackTrace()
         }
     }
 }
