@@ -72,6 +72,8 @@ class DateTimePicker @JvmOverloads constructor(
             listener?.onDateTimeSelected(value)
         }
 
+    var showTodayText: Boolean = true
+
     var listener: DateTimeSelectedListener? = null
 
     init {
@@ -125,7 +127,7 @@ class DateTimePicker @JvmOverloads constructor(
         LongRange(0, ChronoUnit.DAYS.between(minDate, maxDate)).forEach {
             val date = minDate.plusDays(it)
             days.add(date)
-            if (date.toLocalDate().isEqual(startDateTime.toLocalDate()))
+            if (showTodayText && date.toLocalDate().isEqual(LocalDate.now()))
                 daysStrings.add(context.getString(R.string.today))
             else
                 daysStrings.add(date.format(formatter))
