@@ -2,8 +2,7 @@ package ru.dixl0f0s.datetimepicker
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.TypedValue
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -29,39 +28,23 @@ class DateTimePicker @JvmOverloads constructor(
             onMinuteClick(position)
         }
     })
-    private val rvDays = RecyclerView(context).apply {
-        layoutManager = CenterLayoutManager(context)
-        overScrollMode = View.OVER_SCROLL_NEVER
-        adapter = adapterDays
-    }
+    private val rvDays: RecyclerView
 
     private val adapterHours = Adapter(0, 23, object : ItemClickListener {
         override fun onItemClick(position: Int) {
             onMinuteClick(position)
         }
     })
-    private val rvHours = RecyclerView(context).apply {
-        layoutManager = CenterLayoutManager(context)
-        overScrollMode = View.OVER_SCROLL_NEVER
-        adapter = adapterHours
-    }
+    private val rvHours: RecyclerView
 
     private val adapterMinutes = Adapter(0, 59, 5, object : ItemClickListener {
         override fun onItemClick(position: Int) {
             onMinuteClick(position)
         }
     })
-    private val rvMinutes = RecyclerView(context).apply {
-        layoutManager = CenterLayoutManager(context)
-        overScrollMode = View.OVER_SCROLL_NEVER
-        adapter = adapterMinutes
-    }
+    private val rvMinutes: RecyclerView
 
-    private val tvColon = TextView(context).apply {
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-        text = ":"
-        gravity = Gravity.CENTER
-    }
+    private val tvColon: TextView
 
     private var _startDateTime: LocalDateTime? = null
     var startDateTime: LocalDateTime
@@ -130,71 +113,56 @@ class DateTimePicker @JvmOverloads constructor(
     private var isTodayAvailable: Boolean = true
 
     init {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER
-        weightSum = 3f
+        val view = LayoutInflater.from(context).inflate(R.layout.widget_picker, this, true)
+        rvDays = view.findViewById(R.id.rvDays)
+        rvHours = view.findViewById(R.id.rvHours)
+        rvMinutes = view.findViewById(R.id.rvMinutes)
+        tvColon = view.findViewById(R.id.tvColon)
 
         val snapHelperDays = object : LinearSnapHelper() {
             override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
-                val view = super.findSnapView(layoutManager)
-                if (view != null) {
-                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                val snapView = super.findSnapView(layoutManager)
+                if (snapView != null) {
+                    val str = snapView.findViewById<TextView>(R.id.tvItem).text.toString()
                     var pos = adapterDays.getItemPosition(str) - 1
                     if (!isTodayAvailable)
                         pos += 1
                     selectedDate = selectedDate.withDayOfYear(startDateTime.plusDays(pos.toLong()).dayOfYear)
                 }
-                return view
+                return snapView
             }
         }
         snapHelperDays.attachToRecyclerView(rvDays)
-        addView(rvDays)
-        val rvDaysLayoutParams = rvDays.layoutParams as LayoutParams
-        rvDaysLayoutParams.setMargins(10, 0, 30, 0)
-        rvDaysLayoutParams.weight = 1f
-        rvDaysLayoutParams.height = 400
-        rvDays.layoutParams = rvDaysLayoutParams
+        rvDays.layoutManager = CenterLayoutManager(context)
+        rvDays.adapter = adapterDays
 
         val snapHelperHours = object : LinearSnapHelper() {
             override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
-                val view = super.findSnapView(layoutManager)
-                if (view != null) {
-                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                val snapView = super.findSnapView(layoutManager)
+                if (snapView != null) {
+                    val str = snapView.findViewById<TextView>(R.id.tvItem).text.toString()
                     selectedDate = selectedDate.withHour(str.toInt())
                 }
-                return view
+                return snapView
             }
         }
         snapHelperHours.attachToRecyclerView(rvHours)
-        addView(rvHours)
-        val rvHoursLayoutParams = rvHours.layoutParams as LayoutParams
-        rvHoursLayoutParams.setMargins(10, 0, 10, 0)
-        rvHoursLayoutParams.weight = 1f
-        rvHoursLayoutParams.height = 400
-        rvHours.layoutParams = rvHoursLayoutParams
-
-        addView(tvColon)
-        val colonLayoutParams = tvColon.layoutParams as LayoutParams
-        colonLayoutParams.setMargins(10, 0, 10, 0)
-        tvColon.layoutParams = colonLayoutParams
+        rvHours.layoutManager = CenterLayoutManager(context)
+        rvHours.adapter = adapterHours
 
         val snapHelperMinutes = object : LinearSnapHelper() {
             override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
-                val view = super.findSnapView(layoutManager)
-                if (view != null) {
-                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                val snapView = super.findSnapView(layoutManager)
+                if (snapView != null) {
+                    val str = snapView.findViewById<TextView>(R.id.tvItem).text.toString()
                     selectedDate = selectedDate.withMinute(str.toInt())
                 }
-                return view
+                return snapView
             }
         }
         snapHelperMinutes.attachToRecyclerView(rvMinutes)
-        addView(rvMinutes)
-        val rvMinutesLayoutParams = rvMinutes.layoutParams as LayoutParams
-        rvMinutesLayoutParams.setMargins(10, 0, 10, 0)
-        rvMinutesLayoutParams.weight = 1f
-        rvMinutesLayoutParams.height = 400
-        rvMinutes.layoutParams = rvMinutesLayoutParams
+        rvMinutes.layoutManager = CenterLayoutManager(context)
+        rvMinutes.adapter = adapterMinutes
 
         // Snap to start position
         rvDays.post {
