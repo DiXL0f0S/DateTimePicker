@@ -1,47 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:orientation="horizontal"
-    android:weightSum="3">
+    android:layout_height="wrap_content">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvDays"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="30dp"
-        android:layout_weight="1"
-        android:overScrollMode="never" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvHours"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_weight="1"
-        android:overScrollMode="never" />
-
-    <TextView
-        android:id="@+id/tvColon"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:text=":"
-        android:textSize="16sp" />
+        android:orientation="horizontal"
+        android:weightSum="3">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvMinutes"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_weight="1"
-        android:overScrollMode="never" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvDays"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="30dp"
+            android:layout_weight="1"
+            android:overScrollMode="never" />
 
-</LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvHours"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:overScrollMode="never" />
+
+        <TextView
+            android:id="@+id/tvColon"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            android:text=":"
+            android:textSize="16sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMinutes"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:overScrollMode="never" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/viewFadeTop"
+        android:layout_width="match_parent"
+        android:layout_height="80dp" />
+
+    <View
+        android:id="@+id/viewFadeBottom"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom" />
+
+</FrameLayout>

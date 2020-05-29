@@ -1,5 +1,6 @@
 package ru.dixl0f0s.datetimepicker.sample
 
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
@@ -15,6 +16,7 @@ class MainActivity : AppCompatActivity(), DateTimeSelectedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        dateTimePicker.backgroundColor = Color.WHITE
         dateTimePicker.minTime = LocalTime.of(7, 10)
         dateTimePicker.maxTime = LocalTime.of(23, 30)
         dateTimePicker.listener = this

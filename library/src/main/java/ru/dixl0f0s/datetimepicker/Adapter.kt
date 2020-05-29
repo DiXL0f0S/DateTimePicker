@@ -1,14 +1,20 @@
 package ru.dixl0f0s.datetimepicker
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.item.view.*
 
 internal class Adapter(var listener: ItemClickListener) :
     RecyclerView.Adapter<Adapter.ViewHolder>() {
     var items: MutableList<String> = mutableListOf()
+    var textColor: Int = Color.BLACK
+    set(value) {
+        field = value
+        notifyDataSetChanged()
+    }
 
     constructor(start: Int, end: Int, step: Int, listener: ItemClickListener) : this(listener) {
         items.add("")
@@ -80,7 +86,7 @@ internal class Adapter(var listener: ItemClickListener) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.containerView.tvItem.text = items[position]
+        holder.tvItem.text = items[position]
     }
 
     fun getItemPosition(item: String): Int {
@@ -92,8 +98,11 @@ internal class Adapter(var listener: ItemClickListener) :
         return 0
     }
 
-    inner class ViewHolder(val containerView: View) : RecyclerView.ViewHolder(containerView) {
+    inner class ViewHolder(private val containerView: View) : RecyclerView.ViewHolder(containerView) {
+        internal var tvItem: TextView = containerView.findViewById(R.id.tvItem)
+
         init {
+            tvItem.setTextColor(textColor)
             containerView.setOnClickListener { listener.onItemClick(adapterPosition) }
         }
     }

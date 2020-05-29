@@ -1,9 +1,12 @@
 package ru.dixl0f0s.datetimepicker
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
@@ -21,7 +24,7 @@ class DateTimePicker @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
     defStyleRes: Int = 0
-) : LinearLayout(context, attrs, defStyle, defStyleRes) {
+) : FrameLayout(context, attrs, defStyle, defStyleRes) {
 
     private val adapterDays = Adapter(mutableListOf(), object : ItemClickListener {
         override fun onItemClick(position: Int) {
@@ -45,6 +48,10 @@ class DateTimePicker @JvmOverloads constructor(
     private val rvMinutes: RecyclerView
 
     private val tvColon: TextView
+
+    private val viewFadeTop: View
+
+    private val viewFadeBottom: View
 
     private var _startDateTime: LocalDateTime? = null
     var startDateTime: LocalDateTime
@@ -91,18 +98,26 @@ class DateTimePicker @JvmOverloads constructor(
         }
 
     @ColorInt
-    var color: Int? = null
+    var color: Int = Color.BLACK
+        set(value) {
+            field = value
+            adapterDays.textColor = field
+            adapterHours.textColor = field
+            adapterMinutes.textColor = field
+        }
+
+    @ColorInt
+    var backgroundColor: Int? = null
         set(value) {
             if (value == null) {
-                invalidate()
+                viewFadeTop.setBackgroundColor(Color.TRANSPARENT)
+                viewFadeBottom.setBackgroundColor(Color.TRANSPARENT)
             } else {
                 field = value
-                //setNumberPickerTextColor(numberPickerDay, value)
-                //setDividerColor(numberPickerDay, value)
-                //setNumberPickerTextColor(numberPickerHour, value)
-                //setDividerColor(numberPickerHour, value)
-                //setNumberPickerTextColor(numberPickerMinute, value)
-                //setDividerColor(numberPickerMinute, value)
+                viewFadeTop.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                    field!!, Color.TRANSPARENT))
+                viewFadeBottom.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                    Color.TRANSPARENT, field!!))
             }
         }
 
@@ -118,6 +133,8 @@ class DateTimePicker @JvmOverloads constructor(
         rvHours = view.findViewById(R.id.rvHours)
         rvMinutes = view.findViewById(R.id.rvMinutes)
         tvColon = view.findViewById(R.id.tvColon)
+        viewFadeTop = view.findViewById(R.id.viewFadeTop)
+        viewFadeBottom = view.findViewById(R.id.viewFadeBottom)
 
         val snapHelperDays = object : LinearSnapHelper() {
             override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
