@@ -1,29 +1,23 @@
 package ru.dixl0f0s.datetimepicker
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Resources
-import android.graphics.Paint
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
-import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.annotation.ColorInt
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import java.lang.reflect.Field
-import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
+import kotlin.math.ceil
 
 class DateTimePicker @JvmOverloads constructor(
     context: Context,
@@ -31,18 +25,42 @@ class DateTimePicker @JvmOverloads constructor(
     defStyle: Int = 0,
     defStyleRes: Int = 0
 ) : LinearLayout(context, attrs, defStyle, defStyleRes) {
-    private val numberPickerDay = NumberPicker(context)
-    private val numberPickerHour = NumberPicker(context)
+
+    private val adapterDays = Adapter(mutableListOf(), object : ItemClickListener {
+        override fun onItemClick(position: Int) {
+            onMinuteClick(position)
+        }
+    })
+    private val rvDays = RecyclerView(context).apply {
+        layoutManager = CenterLayoutManager(context)
+        overScrollMode = View.OVER_SCROLL_NEVER
+        adapter = adapterDays
+    }
+
+    private val adapterHours = Adapter(0, 23, object : ItemClickListener {
+        override fun onItemClick(position: Int) {
+            onMinuteClick(position)
+        }
+    })
+    private val rvHours = RecyclerView(context).apply {
+        layoutManager = CenterLayoutManager(context)
+        overScrollMode = View.OVER_SCROLL_NEVER
+        adapter = adapterHours
+    }
+
+    private val adapterMinutes = Adapter(0, 59, 5, object : ItemClickListener {
+        override fun onItemClick(position: Int) {
+            onMinuteClick(position)
+        }
+    })
     private val rvMinutes = RecyclerView(context).apply {
         layoutManager = CenterLayoutManager(context)
         overScrollMode = View.OVER_SCROLL_NEVER
-        adapter = Adapter(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"), object : ItemClickListener {
-            override fun onItemClick(position: Int) {
-                onMinuteClick(position)
-            }
-        })
+        adapter = adapterMinutes
     }
+
     private val tvColon = TextView(context).apply {
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
         text = ":"
         gravity = Gravity.CENTER
     }
@@ -75,7 +93,7 @@ class DateTimePicker @JvmOverloads constructor(
             updateValues()
         }
 
-    var maxTime: LocalTime = LocalTime.of(23, 59)
+    var maxTime: LocalTime = LocalTime.of(20, 0)
         set(value) {
             field = value
             updateValues()
@@ -89,8 +107,10 @@ class DateTimePicker @JvmOverloads constructor(
 
     var selectedDate: LocalDateTime = startDateTime
         set(value) {
-            field = value
-            listener?.onDateTimeSelected(value)
+            if (value != field) {
+                field = value
+                listener?.onDateTimeSelected(value)
+            }
         }
 
     @ColorInt
@@ -100,10 +120,10 @@ class DateTimePicker @JvmOverloads constructor(
                 invalidate()
             } else {
                 field = value
-                setNumberPickerTextColor(numberPickerDay, value)
-                setDividerColor(numberPickerDay, value)
-                setNumberPickerTextColor(numberPickerHour, value)
-                setDividerColor(numberPickerHour, value)
+                //setNumberPickerTextColor(numberPickerDay, value)
+                //setDividerColor(numberPickerDay, value)
+                //setNumberPickerTextColor(numberPickerHour, value)
+                //setDividerColor(numberPickerHour, value)
                 //setNumberPickerTextColor(numberPickerMinute, value)
                 //setDividerColor(numberPickerMinute, value)
             }
@@ -113,48 +133,89 @@ class DateTimePicker @JvmOverloads constructor(
 
     var listener: DateTimeSelectedListener? = null
 
+    private var isTodayAvailable: Boolean = true
+
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER
         weightSum = 3f
 
-        addView(numberPickerDay)
-        val dayLayoutParams = numberPickerDay.layoutParams as LayoutParams
-        dayLayoutParams.setMargins(10, 0, 30, 0)
-        dayLayoutParams.weight = 1f
-        numberPickerDay.layoutParams = dayLayoutParams
-        numberPickerDay.setOnValueChangedListener { picker, oldVal, newVal ->
-            onDayChanged(newVal)
+        val snapHelperDays = object : LinearSnapHelper() {
+            override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
+                val view = super.findSnapView(layoutManager)
+                if (view != null) {
+                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                    var pos = adapterDays.getItemPosition(str) + 1
+                    if (!isTodayAvailable)
+                        pos -= 1
+                    selectedDate = selectedDate.withDayOfYear(startDateTime.plusDays(pos.toLong()).dayOfYear)
+                }
+                return view
+            }
         }
+        snapHelperDays.attachToRecyclerView(rvDays)
+        addView(rvDays)
+        val rvDaysLayoutParams = rvDays.layoutParams as LayoutParams
+        rvDaysLayoutParams.setMargins(10, 0, 30, 0)
+        rvDaysLayoutParams.weight = 1f
+        rvDaysLayoutParams.height = 400
+        rvDays.layoutParams = rvDaysLayoutParams
 
-        addView(numberPickerHour)
-        val hourLayoutParams = numberPickerHour.layoutParams as LayoutParams
-        hourLayoutParams.setMargins(10, 0, 10, 0)
-        hourLayoutParams.weight = 1f
-        numberPickerHour.layoutParams = hourLayoutParams
-        numberPickerHour.setOnValueChangedListener { picker, oldVal, newVal ->
-            onHourChanged(getSelectedHour())
+        val snapHelperHours = object : LinearSnapHelper() {
+            override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
+                val view = super.findSnapView(layoutManager)
+                if (view != null) {
+                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                    selectedDate = selectedDate.withHour(str.toInt())
+                }
+                return view
+            }
         }
+        snapHelperHours.attachToRecyclerView(rvHours)
+        addView(rvHours)
+        val rvHoursLayoutParams = rvHours.layoutParams as LayoutParams
+        rvHoursLayoutParams.setMargins(10, 0, 10, 0)
+        rvHoursLayoutParams.weight = 1f
+        rvHoursLayoutParams.height = 400
+        rvHours.layoutParams = rvHoursLayoutParams
 
         addView(tvColon)
         val colonLayoutParams = tvColon.layoutParams as LayoutParams
         colonLayoutParams.setMargins(10, 0, 10, 0)
         tvColon.layoutParams = colonLayoutParams
 
-/*        addView(numberPickerMinute)
-        val minuteLayoutParams = numberPickerMinute.layoutParams as LayoutParams
-        minuteLayoutParams.setMargins(10, 0, 10, 0)
-        minuteLayoutParams.weight = 1f
-        numberPickerMinute.layoutParams = minuteLayoutParams
-        numberPickerMinute.setOnValueChangedListener { picker, oldVal, newVal ->
-            onMinuteChanged(getSelectedMinute())
-        }*/
-
+        val snapHelperMinutes = object : LinearSnapHelper() {
+            override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
+                val view = super.findSnapView(layoutManager)
+                if (view != null) {
+                    val str = view.findViewById<TextView>(R.id.tvItem).text.toString()
+                    selectedDate = selectedDate.withMinute(str.toInt())
+                }
+                return view
+            }
+        }
+        snapHelperMinutes.attachToRecyclerView(rvMinutes)
         addView(rvMinutes)
-        val rvMinutesLayoutParams = numberPickerHour.layoutParams as LayoutParams
+        val rvMinutesLayoutParams = rvMinutes.layoutParams as LayoutParams
         rvMinutesLayoutParams.setMargins(10, 0, 10, 0)
         rvMinutesLayoutParams.weight = 1f
+        rvMinutesLayoutParams.height = 400
         rvMinutes.layoutParams = rvMinutesLayoutParams
+
+        // Snap to start position
+        rvDays.post {
+            rvDays.scrollBy(0, 1)
+        }
+        rvHours.post {
+            rvHours.scrollBy(0, 1)
+        }
+        rvMinutes.post {
+            rvMinutes.scrollBy(0, 1)
+        }
+        rvDays.layoutManager!!.smoothScrollToPosition(rvDays, null, 0)
+        rvHours.layoutManager!!.smoothScrollToPosition(rvHours, null, 0)
+        rvMinutes.layoutManager!!.smoothScrollToPosition(rvMinutes, null, 0)
+        setDateTime(startDateTime)
     }
 
     private fun updateValues() {
@@ -164,37 +225,27 @@ class DateTimePicker @JvmOverloads constructor(
     }
 
     private fun setDayPicker() {
-        val days: MutableList<LocalDateTime> = mutableListOf()
-        val daysStrings: MutableList<String> = mutableListOf()
-        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMMM")
-        for (i in 0..ChronoUnit.DAYS.between(minDate, maxDate)) {
-            val date = minDate.plusDays(i)
-            days.add(date)
-            if (showTodayText && date.toLocalDate().isEqual(LocalDate.now()))
-                daysStrings.add(context.getString(R.string.today))
-            else
-                daysStrings.add(date.format(formatter))
-        }
-        numberPickerDay.valuesList = daysStrings
+        adapterDays.updateData(getDaysList())
     }
 
     private fun setHourPicker() {
-        val hours: MutableList<LocalTime> = mutableListOf()
+/*        val hours: MutableList<LocalTime> = mutableListOf()
         val hoursStrings: MutableList<String> = mutableListOf()
 
         val min: LocalTime
-        if (isFirstDaySelected()) {
-            min = getMaxTime(minTime.withMinute(0), startDateTime.toLocalTime().withMinute(0))
-        } else {
-            min = minTime
-        }
+        //if (isFirstDaySelected()) {
+        //     min = getMaxTime(minTime.withMinute(0), startDateTime.toLocalTime().withMinute(0))
+        // } else {
+        min = minTime
+        // }
         val max = maxTime
         for (i in 0..ChronoUnit.HOURS.between(min, max)) {
             val time = min.plusHours(i)
             if (i == 0L) {
                 if (startDateTime.minute + stepMinutes < 60) {
                     hours.add(time)
-                    val str = (if (time.hour.toString().length == 1) "0" else "") + time.hour.toString()
+                    val str =
+                        (if (time.hour.toString().length == 1) "0" else "") + time.hour.toString()
                     hoursStrings.add(str)
                 }
             } else {
@@ -204,19 +255,19 @@ class DateTimePicker @JvmOverloads constructor(
             }
         }
         numberPickerHour.valuesList = hoursStrings
-        selectedDate = selectedDate.withHour(getSelectedHour())
+        selectedDate = selectedDate.withHour(getSelectedHour())*/
     }
 
     private fun setMinutePicker() {
-        val minutes: MutableList<LocalTime> = mutableListOf()
+/*        val minutes: MutableList<LocalTime> = mutableListOf()
         val minutesStrings: MutableList<String> = mutableListOf()
 
         val min: LocalTime
-        if (isFirstDaySelected() && isFirstHourSelected()) {
-            min = getMaxTime(minTime.withHour(getSelectedHour()), startDateTime.toLocalTime())
-        } else {
-            min = minTime.withHour(getSelectedHour())
-        }
+        //if (isFirstDaySelected() && isFirstHourSelected()) {
+        //    min = getMaxTime(minTime.withHour(getSelectedHour()), startDateTime.toLocalTime())
+        // } else {
+        min = minTime.withHour(getSelectedHour())
+        //}
 
         val max: LocalTime
         if (isLastHourSelected()) {
@@ -232,7 +283,7 @@ class DateTimePicker @JvmOverloads constructor(
                     (if (time.minute.toString().length == 1) "0" else "") + time.minute.toString()
                 minutesStrings.add(str)
             }
-        }
+        }*/
         //numberPickerMinute.valuesList = minutesStrings
         //selectedDate = selectedDate.withMinute(getSelectedMinute())
     }
@@ -255,20 +306,20 @@ class DateTimePicker @JvmOverloads constructor(
         selectedDate = selectedDate.withMinute(minute)
     }
 
-    fun getSelectedHour(): Int = numberPickerHour.displayedValues[numberPickerHour.value].toInt()
+    /*fun getSelectedHour(): Int = numberPickerHour.displayedValues[numberPickerHour.value].toInt()*/
 
 /*    fun getSelectedMinute(): Int =
         numberPickerMinute.displayedValues[numberPickerMinute.value].toInt()*/
 
-    fun isFirstDaySelected(): Boolean = numberPickerDay.value == 0
+    /*fun isFirstDaySelected(): Boolean = numberPickerDay.value == 0*/
 
-    fun isLastDaySelected(): Boolean =
-        numberPickerDay.value == (numberPickerDay.displayedValues.size - 1)
+    /*fun isLastDaySelected(): Boolean =
+        numberPickerDay.value == (numberPickerDay.displayedValues.size - 1)*/
 
-    fun isFirstHourSelected(): Boolean = numberPickerHour.value == 0
+    /*fun isFirstHourSelected(): Boolean = numberPickerHour.value == 0*/
 
-    fun isLastHourSelected(): Boolean =
-        numberPickerHour.value == (numberPickerHour.displayedValues.size - 1)
+/*    fun isLastHourSelected(): Boolean =
+        numberPickerHour.value == (numberPickerHour.displayedValues.size - 1)*/
 
 /*    fun isFirstMinuteSelected(): Boolean = numberPickerMinute.value == 0*/
 
@@ -296,15 +347,14 @@ class DateTimePicker @JvmOverloads constructor(
         return localDateTimeB
     }
 
-    private var NumberPicker.valuesList: Collection<String>
-        get() = displayedValues.toList()
-        set(value) {
-            displayedValues = null
-            minValue = 0
-            maxValue = value.size - 1
-            wrapSelectorWheel = false
-            displayedValues = value.toTypedArray()
-        }
+    private fun LocalTime.isInRange(startTime: LocalTime, endTime: LocalTime): Boolean =
+        this.isAfter(startTime) && this.isBefore(endTime)
+
+    private fun LocalDateTime.isInRange(
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
+    ): Boolean =
+        this.isAfter(startDateTime) && this.isBefore(endDateTime)
 
     private fun LocalDate.isToday() = startDateTime.toLocalDate().isEqual(this)
 
@@ -314,71 +364,63 @@ class DateTimePicker @JvmOverloads constructor(
 
     private fun LocalDateTime.isCurrentHour() = this.hour == startDateTime.hour
 
-    private fun setNumberPickerTextColor(numberPicker: NumberPicker, color: Int) {
-        try {
-            val selectorWheelPaintField: Field = numberPicker.javaClass
-                .getDeclaredField("mSelectorWheelPaint")
-            selectorWheelPaintField.setAccessible(true)
-            (selectorWheelPaintField.get(numberPicker) as Paint).setColor(color)
-        } catch (e: NoSuchFieldException) {
-            Log.w("NumberPickerTextColor", e)
-        } catch (e: IllegalAccessException) {
-            Log.w("NumberPickerTextColor", e)
-        } catch (e: IllegalArgumentException) {
-            Log.w("NumberPickerTextColor", e)
-        }
-        val count = numberPicker.childCount
-        for (i in 0 until count) {
-            val child: View = numberPicker.getChildAt(i)
-            if (child is EditText)
-                child.setTextColor(color)
-        }
-        numberPicker.invalidate()
-    }
-
-    private fun setDividerColor(picker: NumberPicker, color: Int) {
-        val pickerFields =
-            NumberPicker::class.java.declaredFields
-        for (pf in pickerFields) {
-            if (pf.name == "mSelectionDivider") {
-                pf.isAccessible = true
-                try {
-                    val colorDrawable = ColorDrawable(color)
-                    pf[picker] = colorDrawable
-                } catch (e: java.lang.IllegalArgumentException) {
-                    e.printStackTrace()
-                } catch (e: Resources.NotFoundException) {
-                    e.printStackTrace()
-                } catch (e: IllegalAccessException) {
-                    e.printStackTrace()
-                }
-                break
-            }
-        }
-    }
-
     private fun onMinuteClick(pos: Int) {
         rvMinutes.layoutManager!!.smoothScrollToPosition(rvMinutes, null, pos)
     }
 
-    @SuppressLint("DiscouragedPrivateApi")
-    private fun changeValueByOne(higherPicker: NumberPicker, increment: Boolean) {
-        val method: Method
-        try {
-            method = higherPicker.javaClass.getDeclaredMethod(
-                "changeValueByOne",
-                Boolean::class.javaPrimitiveType
-            )
-            method.setAccessible(true)
-            method.invoke(higherPicker, increment)
-        } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
-        } catch (e: java.lang.IllegalArgumentException) {
-            e.printStackTrace()
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        } catch (e: InvocationTargetException) {
-            e.printStackTrace()
+    // TODO: Works with start date only
+    private fun setDateTime(dateTime: LocalDateTime) {
+        if (dateTime.toLocalTime().isInRange(minTime, maxTime)) {
+            isTodayAvailable = true
+            adapterDays.updateData(getDaysList())
+            (rvHours.layoutManager as CenterLayoutManager)
+                .smoothScrollToPosition(
+                    rvHours,
+                    null,
+                    adapterHours.getItemPosition(dateTime.hour.toString())
+                )
+            (rvMinutes.layoutManager as CenterLayoutManager)
+                .smoothScrollToPosition(
+                    rvMinutes,
+                    null,
+                    adapterMinutes.getItemPosition(roundToStep(dateTime.minute).toString())
+                )
+        } else {
+            isTodayAvailable = false
+            adapterDays.updateData(getDaysList())
+            (rvHours.layoutManager as CenterLayoutManager)
+                .smoothScrollToPosition(
+                    rvHours,
+                    null,
+                    adapterHours.getItemPosition(minTime.hour.toString())
+                )
+            (rvMinutes.layoutManager as CenterLayoutManager)
+                .smoothScrollToPosition(
+                    rvMinutes,
+                    null,
+                    adapterMinutes.getItemPosition(roundToStep(minTime.minute).toString())
+                )
         }
+    }
+
+    private fun getDaysList(): MutableList<String> {
+        val daysStrings: MutableList<String> = mutableListOf()
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMMM")
+        for (i in 0..ChronoUnit.DAYS.between(minDate, maxDate)) {
+            val date = minDate.plusDays(i)
+            if (i == 0L && isTodayAvailable) {
+                if (showTodayText)
+                    daysStrings.add(context.getString(R.string.today))
+                else
+                    daysStrings.add(date.format(formatter))
+            } else if (i != 0L) {
+                daysStrings.add(date.format(formatter))
+            }
+        }
+        return daysStrings
+    }
+
+    private fun roundToStep(number: Int): Int {
+        return (stepMinutes * (ceil(abs(number / stepMinutes.toFloat())))).toInt()
     }
 }
