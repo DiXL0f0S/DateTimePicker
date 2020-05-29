@@ -14,6 +14,8 @@ import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.annotation.ColorInt
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -31,7 +33,15 @@ class DateTimePicker @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyle, defStyleRes) {
     private val numberPickerDay = NumberPicker(context)
     private val numberPickerHour = NumberPicker(context)
-    private val numberPickerMinute = NumberPicker(context)
+    private val rvMinutes = RecyclerView(context).apply {
+        layoutManager = CenterLayoutManager(context)
+        overScrollMode = View.OVER_SCROLL_NEVER
+        adapter = Adapter(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"), object : ItemClickListener {
+            override fun onItemClick(position: Int) {
+                onMinuteClick(position)
+            }
+        })
+    }
     private val tvColon = TextView(context).apply {
         text = ":"
         gravity = Gravity.CENTER
@@ -94,8 +104,8 @@ class DateTimePicker @JvmOverloads constructor(
                 setDividerColor(numberPickerDay, value)
                 setNumberPickerTextColor(numberPickerHour, value)
                 setDividerColor(numberPickerHour, value)
-                setNumberPickerTextColor(numberPickerMinute, value)
-                setDividerColor(numberPickerMinute, value)
+                //setNumberPickerTextColor(numberPickerMinute, value)
+                //setDividerColor(numberPickerMinute, value)
             }
         }
 
@@ -131,14 +141,20 @@ class DateTimePicker @JvmOverloads constructor(
         colonLayoutParams.setMargins(10, 0, 10, 0)
         tvColon.layoutParams = colonLayoutParams
 
-        addView(numberPickerMinute)
+/*        addView(numberPickerMinute)
         val minuteLayoutParams = numberPickerMinute.layoutParams as LayoutParams
         minuteLayoutParams.setMargins(10, 0, 10, 0)
         minuteLayoutParams.weight = 1f
         numberPickerMinute.layoutParams = minuteLayoutParams
         numberPickerMinute.setOnValueChangedListener { picker, oldVal, newVal ->
             onMinuteChanged(getSelectedMinute())
-        }
+        }*/
+
+        addView(rvMinutes)
+        val rvMinutesLayoutParams = numberPickerHour.layoutParams as LayoutParams
+        rvMinutesLayoutParams.setMargins(10, 0, 10, 0)
+        rvMinutesLayoutParams.weight = 1f
+        rvMinutes.layoutParams = rvMinutesLayoutParams
     }
 
     private fun updateValues() {
@@ -217,8 +233,8 @@ class DateTimePicker @JvmOverloads constructor(
                 minutesStrings.add(str)
             }
         }
-        numberPickerMinute.valuesList = minutesStrings
-        selectedDate = selectedDate.withMinute(getSelectedMinute())
+        //numberPickerMinute.valuesList = minutesStrings
+        //selectedDate = selectedDate.withMinute(getSelectedMinute())
     }
 
     private fun onDayChanged(index: Int) {
@@ -241,8 +257,8 @@ class DateTimePicker @JvmOverloads constructor(
 
     fun getSelectedHour(): Int = numberPickerHour.displayedValues[numberPickerHour.value].toInt()
 
-    fun getSelectedMinute(): Int =
-        numberPickerMinute.displayedValues[numberPickerMinute.value].toInt()
+/*    fun getSelectedMinute(): Int =
+        numberPickerMinute.displayedValues[numberPickerMinute.value].toInt()*/
 
     fun isFirstDaySelected(): Boolean = numberPickerDay.value == 0
 
@@ -254,10 +270,10 @@ class DateTimePicker @JvmOverloads constructor(
     fun isLastHourSelected(): Boolean =
         numberPickerHour.value == (numberPickerHour.displayedValues.size - 1)
 
-    fun isFirstMinuteSelected(): Boolean = numberPickerMinute.value == 0
+/*    fun isFirstMinuteSelected(): Boolean = numberPickerMinute.value == 0*/
 
-    fun isLastMinuteSelected(): Boolean =
-        numberPickerMinute.value == (numberPickerMinute.displayedValues.size - 1)
+/*    fun isLastMinuteSelected(): Boolean =
+        numberPickerMinute.value == (numberPickerMinute.displayedValues.size - 1)*/
 
     private fun getMaxTime(localTimeA: LocalTime, localTimeB: LocalTime): LocalTime {
         if (localTimeA.isAfter(localTimeB))
@@ -297,10 +313,6 @@ class DateTimePicker @JvmOverloads constructor(
     private fun LocalTime.isCurrentHour() = this.hour == startDateTime.hour
 
     private fun LocalDateTime.isCurrentHour() = this.hour == startDateTime.hour
-
-    internal fun selectNextMinute() {
-        changeValueByOne(numberPickerMinute, true)
-    }
 
     private fun setNumberPickerTextColor(numberPicker: NumberPicker, color: Int) {
         try {
@@ -343,6 +355,10 @@ class DateTimePicker @JvmOverloads constructor(
                 break
             }
         }
+    }
+
+    private fun onMinuteClick(pos: Int) {
+        rvMinutes.layoutManager!!.smoothScrollToPosition(rvMinutes, null, pos)
     }
 
     @SuppressLint("DiscouragedPrivateApi")
