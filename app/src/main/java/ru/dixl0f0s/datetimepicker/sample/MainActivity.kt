@@ -6,6 +6,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import ru.dixl0f0s.datetimepicker.DateTimeSelectedListener
 import ru.dixl0f0s.datetimepicker.R
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -14,8 +15,8 @@ class MainActivity : AppCompatActivity(), DateTimeSelectedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        dateTimePicker.minDate = LocalDateTime.now()
-        dateTimePicker.maxDate = LocalDateTime.now().plusDays(7)
+        dateTimePicker.minTime = LocalTime.of(7, 10)
+        dateTimePicker.maxTime = LocalTime.of(23, 30)
         dateTimePicker.listener = this
     }
 
