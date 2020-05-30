@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity(), DateTimeSelectedListener {
         dateTimePicker.backgroundColor = Color.WHITE
         dateTimePicker.minTime = LocalTime.of(7, 10)
         dateTimePicker.maxTime = LocalTime.of(23, 30)
+        dateTimePicker.showDate = true
         dateTimePicker.listener = this
     }
 
