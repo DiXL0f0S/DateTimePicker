@@ -64,7 +64,8 @@ class DateTimePicker @JvmOverloads constructor(
     private var _startDateTime: LocalDateTime? = null
     var startDateTime: LocalDateTime
         get() {
-            return if (_startDateTime == null) LocalDateTime.now().withSecond(0).withNano(0) else _startDateTime!!
+            return if (_startDateTime == null) LocalDateTime.now().withSecond(0)
+                .withNano(0) else _startDateTime!!
         }
         set(value) {
             _startDateTime = value
@@ -79,7 +80,11 @@ class DateTimePicker @JvmOverloads constructor(
 
     var maxTime: LocalTime = LocalTime.of(23, 59)
         set(value) {
-            field = value
+            if (value.isBefore(minTime)) { // FIXME
+                field = LocalTime.of(23, 59)
+            } else {
+                field = value
+            }
             updateValues()
         }
 
@@ -118,20 +123,26 @@ class DateTimePicker @JvmOverloads constructor(
                 viewFadeBottom.setBackgroundColor(Color.TRANSPARENT)
             } else {
                 field = value
-                viewFadeTop.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
-                    field!!, Color.TRANSPARENT))
-                viewFadeBottom.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
-                    Color.TRANSPARENT, field!!))
+                viewFadeTop.background = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                        field!!, Color.TRANSPARENT
+                    )
+                )
+                viewFadeBottom.background = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                        Color.TRANSPARENT, field!!
+                    )
+                )
             }
         }
 
     var showTodayText: Boolean = true
 
     var showDate: Boolean = true
-    set(value) {
-        field = value
-        rvDays.visibility = if (field) View.VISIBLE else View.GONE
-    }
+        set(value) {
+            field = value
+            rvDays.visibility = if (field) View.VISIBLE else View.GONE
+        }
 
     var listener: DateTimeSelectedListener? = null
 
@@ -156,7 +167,8 @@ class DateTimePicker @JvmOverloads constructor(
                     var pos = adapterDays.getItemPosition(str) - 1
                     if (!isTodayAvailable)
                         pos += 1
-                    selectedDate = selectedDate.withDayOfYear(startDateTime.plusDays(pos.toLong()).dayOfYear)
+                    selectedDate =
+                        selectedDate.withDayOfYear(startDateTime.plusDays(pos.toLong()).dayOfYear)
                 }
                 return snapView
             }
