@@ -25,6 +25,11 @@ class DateTimePicker @JvmOverloads constructor(
     defStyle: Int = 0,
     defStyleRes: Int = 0
 ) : FrameLayout(context, attrs, defStyle, defStyleRes) {
+    var stepMinutes: Int = 5
+        set(value) {
+            field = value
+            updateValues()
+        }
 
     private val adapterDays = Adapter(mutableListOf(), object : ItemClickListener {
         override fun onItemClick(position: Int) {
@@ -40,7 +45,7 @@ class DateTimePicker @JvmOverloads constructor(
     })
     private val rvHours: RecyclerView
 
-    private val adapterMinutes = Adapter(0, 59, 5, object : ItemClickListener {
+    private val adapterMinutes = Adapter(0, 59, stepMinutes, object : ItemClickListener {
         override fun onItemClick(position: Int) {
             onMinuteClick(position)
         }
@@ -52,6 +57,10 @@ class DateTimePicker @JvmOverloads constructor(
     private val viewFadeTop: View
 
     private val viewFadeBottom: View
+
+    private val viewDividerTop: View
+
+    private val viewDividerBottom: View
 
     private var _startDateTime: LocalDateTime? = null
     var startDateTime: LocalDateTime
@@ -70,12 +79,6 @@ class DateTimePicker @JvmOverloads constructor(
         }
 
     var maxTime: LocalTime = LocalTime.of(23, 59)
-        set(value) {
-            field = value
-            updateValues()
-        }
-
-    var stepMinutes: Int = 5
         set(value) {
             field = value
             updateValues()
@@ -104,6 +107,8 @@ class DateTimePicker @JvmOverloads constructor(
             adapterDays.textColor = field
             adapterHours.textColor = field
             adapterMinutes.textColor = field
+            viewDividerTop.setBackgroundColor(field)
+            viewDividerBottom.setBackgroundColor(field)
         }
 
     @ColorInt
@@ -135,6 +140,8 @@ class DateTimePicker @JvmOverloads constructor(
         tvColon = view.findViewById(R.id.tvColon)
         viewFadeTop = view.findViewById(R.id.viewFadeTop)
         viewFadeBottom = view.findViewById(R.id.viewFadeBottom)
+        viewDividerTop = view.findViewById(R.id.viewDividerTop)
+        viewDividerBottom = view.findViewById(R.id.viewDividerBottom)
 
         val snapHelperDays = object : LinearSnapHelper() {
             override fun findSnapView(layoutManager: RecyclerView.LayoutManager?): View? {
