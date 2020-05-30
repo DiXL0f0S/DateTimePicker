@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.LinearSnapHelper
@@ -33,21 +32,21 @@ class DateTimePicker @JvmOverloads constructor(
 
     private val adapterDays = Adapter(mutableListOf(), object : ItemClickListener {
         override fun onItemClick(position: Int) {
-            onMinuteClick(position)
+            rvDays.layoutManager!!.smoothScrollToPosition(rvMinutes, null, position)
         }
     })
     private val rvDays: RecyclerView
 
     private val adapterHours = Adapter(0, 23, object : ItemClickListener {
         override fun onItemClick(position: Int) {
-            onMinuteClick(position)
+            rvHours.layoutManager!!.smoothScrollToPosition(rvHours, null, position)
         }
     })
     private val rvHours: RecyclerView
 
     private val adapterMinutes = Adapter(0, 59, stepMinutes, object : ItemClickListener {
         override fun onItemClick(position: Int) {
-            onMinuteClick(position)
+            rvMinutes.layoutManager!!.smoothScrollToPosition(rvMinutes, null, position)
         }
     })
     private val rvMinutes: RecyclerView
@@ -218,10 +217,6 @@ class DateTimePicker @JvmOverloads constructor(
         endDateTime: LocalDateTime
     ): Boolean =
         this.isAfter(startDateTime) && this.isBefore(endDateTime)
-
-    private fun onMinuteClick(pos: Int) {
-        rvMinutes.layoutManager!!.smoothScrollToPosition(rvMinutes, null, pos)
-    }
 
     private fun adjustPickers(time: LocalTime) {
         (rvHours.layoutManager as CenterLayoutManager)
