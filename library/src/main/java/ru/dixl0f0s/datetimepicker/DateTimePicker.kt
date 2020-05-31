@@ -81,6 +81,7 @@ class DateTimePicker @JvmOverloads constructor(
     var maxTime: LocalTime = LocalTime.of(23, 59)
         set(value) {
             if (value.isBefore(minTime)) { // FIXME
+                @Suppress("unused")
                 field = LocalTime.of(23, 59)
             } else {
                 field = value
@@ -104,10 +105,12 @@ class DateTimePicker @JvmOverloads constructor(
             }
         }
 
+    @Suppress("unused")
     @ColorInt
     var color: Int = Color.BLACK
         set(value) {
             field = value
+            tvColon.setTextColor(field)
             adapterDays.textColor = field
             adapterHours.textColor = field
             adapterMinutes.textColor = field
@@ -115,6 +118,7 @@ class DateTimePicker @JvmOverloads constructor(
             viewDividerBottom.setBackgroundColor(field)
         }
 
+    @Suppress("unused")
     @ColorInt
     var backgroundColor: Int? = null
         set(value) {
