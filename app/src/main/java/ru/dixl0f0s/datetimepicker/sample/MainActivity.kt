@@ -20,11 +20,21 @@ class MainActivity : AppCompatActivity(), DateTimeSelectedListener {
         dateTimePicker.minTime = LocalTime.of(7, 10)
         dateTimePicker.maxTime = LocalTime.of(23, 30)
         dateTimePicker.showDate = true
+        dateTimePicker.showTime = true
         dateTimePicker.listener = this
     }
 
     override fun onDateTimeSelected(dateTime: LocalDateTime) {
+        var pattern = ""
+        if (dateTimePicker.showDate) {
+            pattern = "dd.MM.yyyy"
+            if (dateTimePicker.showTime) {
+                pattern += " HH:mm"
+            }
+        } else if (dateTimePicker.showTime) {
+            pattern = "HH:mm"
+        }
         tvSelectedDate.text =
-            dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
+            dateTime.format(DateTimeFormatter.ofPattern(pattern))
     }
 }

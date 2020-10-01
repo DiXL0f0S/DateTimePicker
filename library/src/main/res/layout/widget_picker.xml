@@ -18,6 +18,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="30dp"
             android:layout_weight="1"
+            android:nestedScrollingEnabled="true"
             android:overScrollMode="never" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -27,6 +28,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
+            android:nestedScrollingEnabled="true"
             android:overScrollMode="never" />
 
         <TextView
@@ -47,6 +49,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
+            android:nestedScrollingEnabled="true"
             android:overScrollMode="never" />
 
     </LinearLayout>
