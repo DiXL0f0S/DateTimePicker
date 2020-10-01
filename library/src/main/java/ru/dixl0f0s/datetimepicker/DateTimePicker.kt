@@ -144,6 +144,14 @@ class DateTimePicker @JvmOverloads constructor(
             rvDays.visibility = if (field) View.VISIBLE else View.GONE
         }
 
+    var showTime: Boolean = true
+        set(value) {
+            field = value
+            rvHours.visibility = if (field) View.VISIBLE else View.GONE
+            rvMinutes.visibility = if (field) View.VISIBLE else View.GONE
+            tvColon.visibility = if (field) View.VISIBLE else View.GONE
+        }
+
     var listener: DateTimeSelectedListener? = null
 
     private var isTodayAvailable: Boolean = true
