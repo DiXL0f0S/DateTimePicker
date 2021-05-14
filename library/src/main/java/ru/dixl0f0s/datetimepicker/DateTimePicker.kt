@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 import kotlin.math.ceil
 
-class DateTimePicker @JvmOverloads constructor(
+open class DateTimePicker @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
