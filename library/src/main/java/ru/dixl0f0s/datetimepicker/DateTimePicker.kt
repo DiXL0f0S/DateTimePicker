@@ -24,11 +24,9 @@ open class DateTimePicker @JvmOverloads constructor(
     defStyle: Int = 0,
     defStyleRes: Int = 0
 ) : FrameLayout(context, attrs, defStyle, defStyleRes) {
-    var stepMinutes: Int = 5
-        set(value) {
-            field = value
-            updateValues()
-        }
+    companion object {
+        var stepMinutes = 5
+    }
 
     private val adapterDays = Adapter(mutableListOf(), object : ItemClickListener {
         override fun onItemClick(position: Int) {
